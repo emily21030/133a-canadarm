@@ -1,5 +1,5 @@
 # 133a-canadarm
-Team repo for ME/CS 133a project
+Team repo for ME/CS 133a project. Clone this project into your ~/robotws/src/ directory on VM.
 
 ### Initial Meeting Notes 2024/11/19
 Robot: Canadarm
