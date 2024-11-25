@@ -36,14 +36,14 @@ class Trajectory():
     def evaluate(self, t, dt):
         # Compute the joint values.  We could build up numpy arrays as
         # position and velocity vectors, but just compute the values:
-        theta_pan  = pi/3*sin(2*t)
-        omega_pan  = pi/3*cos(2*t)*2*dt
+        theta_1  = pi/3*sin(2*t)
+        omega_1  = pi/3*cos(2*t)*2*dt
 
-        theta_tilt =  pi/3*sin(1*t)-pi/9*cos(6*t)
-        omega_tilt =  pi/3*cos(1*t)*dt+pi/9*sin(6*t)*6*dt
+        theta_2 =  pi/3*sin(1*t)-pi/9*cos(6*t)
+        omega_2 =  pi/3*cos(1*t)*dt+pi/9*sin(6*t)*6*dt
 
         # Return the position and velocity as python lists.
-        return ([0.0, 0.0, 0.0, 0.0, theta_pan, theta_tilt, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, omega_pan, omega_tilt, 0.0, 0.0, 0.0])
+        return ([0.0, theta_1, theta_2, theta_1, theta_1, theta_2, 0.0, 0.0, 0.0], [0.0, theta_1, theta_2, theta_1, omega_1, omega_2, 0.0, 0.0, 0.0])
 
 
 #
