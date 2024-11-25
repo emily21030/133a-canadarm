@@ -30,7 +30,7 @@ class Trajectory():
     # Declare the joint names.
     def jointnames(self):
         # Return a list of joint names MATCHING THE JOINT NAMES IN THE URDF!
-        return ['dum', 'shr', 'shy', 'shp', 'elp', 'wrp', 'wry', 'wrr', 'ee']
+        return ['dummyBaseJoint', 'Shoulder_Roll', 'Shoulder_Yaw', 'Shoulder_Pitch', 'Elbow_Pitch', 'Wrist_Pitch', 'Wrist_Yaw', 'Wrist_Roll', 'joint_ee_fixed']
 
     # Evaluate at the given time and time step since last call.
     def evaluate(self, t, dt):
