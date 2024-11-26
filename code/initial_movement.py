@@ -1,5 +1,5 @@
 '''
-hw3p4.py
+initial_movement.py
 
    This is code for initial movement of SSRMS Canadarm 2
 
