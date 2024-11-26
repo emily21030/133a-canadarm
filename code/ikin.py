@@ -29,25 +29,25 @@ class Trajectory():
     # Initialization.
     def __init__(self, node):
         # Set up the kinematic chain object.
-        self.chain = KinematicChain(node, 'world', 'tip', self.jointnames())
+        self.chain = KinematicChain(node, 'world', 'link_ee', self.jointnames())
         
         # Define the various points.
-        self.njoints = 9
+        self.njoints = 7
         self.q0 = np.radians(np.zeros(self.njoints))
         self.p0 = np.array([17.688, 1.6134, 0.0])
         self.R0 = Reye()
 
-        self.pastr  = np.array([0.3, 0.5, 0.15])
+        self.pleft = np.array([5.127, 1.3999, 15.698])
+        self.pright  = np.array([0.63958, 0.19806, -0.4366])
 
-        self.Rleft = np.array([[0, 0, -1], [1, 0, 0], [0, -1, 0]])
+        self.Rleft = Reye()
         self.Rright = Reye()
 
         # Initialize the current/starting joint position.
         self.qd = self.q0
         self.pd = self.p0
         self.Rd = self.R0
-        self.lam = 50
-        self.L = 0.4
+        self.lam = 20
         
         # Setup the condition number publisher
         self.pub = node.create_publisher(Float64, '/condition', 10)
@@ -56,7 +56,7 @@ class Trajectory():
     # Declare the joint names.
     def jointnames(self):
         # Return a list of joint names FOR THE EXPECTED URDF!
-        return ['theta1', 'theta2', 'theta3', 'theta4', 'theta5', 'theta6']
+        return ['Shoulder_Roll', 'Shoulder_Yaw', 'Shoulder_Pitch', 'Elbow_Pitch', 'Wrist_Pitch', 'Wrist_Yaw', 'Wrist_Roll']
 
     # Evaluate at the given time.  This was last called (dt) ago.
     def evaluate(self, t, dt):
@@ -73,22 +73,25 @@ class Trajectory():
             wd = np.zeros(3)
             
         else: 
-            s = cos(np.pi/2.5 * (t-3))
-            sdot = -pi/2.5 * np.sin(np.pi/2.5 * (t-3))
-            
-            pd = np.array([-0.3*s, 0.5, 0.5-0.35*s**2])
-            vd = np.array([-0.3*sdot, 0.0, -0.70*s*sdot])
-            
-            alpha = -pi/3 * (s-1)
-            alphadot = -pi/3 * sdot
-            
-            nleft = np.array([1, 1, -1]) / sqrt(3)
-            Rd = Rotn(nleft, -alpha)
-            wd = -nleft * alphadot
-        
+            t = (t-3) % 10
+            if t < 5.0:
+                # Approach movement:
+                (s0, s0dot) = goto(t, 5.0, 0.0, 1.0)
 
-        # FIXME: REUSE THE PREVIOUS INVERSE KINEMATICS.
+                pd = self.pright + (self.pleft - self.pright) * s0
+                vd =           (self.pleft - self.pright) * s0dot
+            
+            else:
+                (s0, s0dot) = goto(t-5, 5.0, 0.0, 1.0)
 
+                pd = self.pleft + (self.pright - self.pleft) * s0
+                vd =           (self.pright - self.pleft) * s0dot
+
+                Rd = Reye()
+                wd = np.zeros(3)
+
+            Rd = Reye()
+            wd = np.zeros(3)
 
         # Grab the last joint value and desired orientation.
         qdlast = self.qd
@@ -101,15 +104,10 @@ class Trajectory():
         vr = vd+self.lam*ep(pdlast, p)
         wr = wd+self.lam*eR(Rdlast, R)
         
-        vec6 = np.concatenate((vr, wr))
+        xr_dot = np.concatenate((vr, wr))
         J = np.vstack((Jv, Jw))
         
-        qddot = np.linalg.inv(J)@vec6
-        
-        # Compute and publish the condition number
-        Jbar = np.diag([1/self.L, 1/self.L, 1/self.L, 1, 1, 1]) @ J
-        condition = np.linalg.cond(Jbar)
-        self.pub.publish(Float64(data=condition))
+        qddot = np.linalg.pinv(J)@xr_dot
 
         # Integrate the joint position.
         qd = qdlast + dt * qddot

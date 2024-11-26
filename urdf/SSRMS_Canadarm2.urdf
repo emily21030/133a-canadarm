@@ -469,5 +469,27 @@ The link CoM locations (with respect to link frame) are set to zero as the inert
     </visual>
   </link>
 
+   <!-- *************************************************** -->
+  <!-- *********** Additional Visual Elements ************ -->
+  <!-- *************************************************** -->
+
+  <!-- THESE ARE EXAMPLES... PLAY AS YOU LIKE -->
+
+  <!-- *** Attach a sphere to the tip *** -->
+
+  <joint name="attach-sphere" type="fixed">
+    <parent link="link_ee"/>
+    <child  link="sphere"/>
+  </joint>
+  <link name="sphere">				<!-- Frame with sphere -->
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>		<!-- Center of sphere -->
+      <geometry>
+	<sphere radius="0.2" />			<!-- Size of sphere -->
+      </geometry>
+      <material name="green"/>			<!-- Color -->
+    </visual>
+  </link>
+
 
 </robot>
