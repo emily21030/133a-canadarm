@@ -34,7 +34,7 @@ class Trajectory():
         # Define the various points.
         self.njoints = 9
         self.q0 = np.radians(np.zeros(self.njoints))
-        self.p0 = np.array([0.0, 0.55, 1.0])
+        self.p0 = np.array([17.688, 1.6134, 0.0])
         self.R0 = Reye()
 
         self.pleft  = np.array([0.3, 0.5, 0.15])
