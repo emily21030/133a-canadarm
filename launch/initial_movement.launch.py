@@ -1,4 +1,4 @@
-"""Launch HW7 P1
+"""Launch initial_movement.py
 
    ros2 launch code initial_movement.launch.py
 
@@ -34,7 +34,7 @@ def generate_launch_description():
     rvizcfg = os.path.join(pkgdir('hw5code'), 'rviz/viewurdfplus.rviz')
 
     # Locate the URDF file.
-    urdf = os.path.join(pkgdir('133a-canadarm'), 'urdf/SRMS_Canadarm.urdf')
+    urdf = os.path.join(pkgdir('code'), 'urdf/SSRMS_Canadarm2.urdf')
 
     # Load the robot's URDF file (XML).
     with open(urdf, 'r') as file:
@@ -64,7 +64,7 @@ def generate_launch_description():
     # Configure a node for the joint trajectory
     node_trajectory = Node(
         name       = 'trajectory', 
-        package    = '133a-canadarm',
+        package    = 'code',
         executable = 'initial_movement',
         output     = 'screen')
 
