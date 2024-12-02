@@ -223,21 +223,21 @@ class Trajectory():
 def main(args=None):
     # Initialize ROS and the demo node (100Hz).
     rclpy.init(args=args)
-    node = DemoNode('balldemo', 100)
+    #node = DemoNode('balldemo', 100)
 
     # Initialize the generator node for 100Hz udpates, using the above
     # Trajectory class.
     generator = GeneratorNode('generator', 100, Trajectory)
 
     # Run until interrupted.
-    rclpy.spin(node)
+    #rclpy.spin(node)
 
     # Spin, meaning keep running (taking care of the timer callbacks
     # and message passing), until interrupted or the trajectory ends.
     generator.spin()
 
     # Shutdown the node and ROS.
-    node.shutdown()
+    #node.shutdown()
     generator.shutdown()
     rclpy.shutdown()
 
