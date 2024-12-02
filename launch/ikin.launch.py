@@ -31,7 +31,7 @@ def generate_launch_description():
     # LOCATE FILES
 
     # Locate the RVIZ configuration file.
-    rvizcfg = os.path.join(pkgdir('code'), 'rviz/viewurdfplus.rviz')
+    rvizcfg = os.path.join(pkgdir('code'), 'rviz/viewmarkers.rviz')
 
     # Locate the URDF file.
     urdf = os.path.join(pkgdir('code'), 'urdf/SSRMS_Canadarm2.urdf')
@@ -65,7 +65,7 @@ def generate_launch_description():
     node_trajectory = Node(
         name       = 'trajectory', 
         package    = 'code',
-        executable = 'ikin',
+        executable = 'ikin_node',
         output     = 'screen')
 
 

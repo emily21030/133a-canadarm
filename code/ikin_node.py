@@ -175,10 +175,10 @@ class DemoNode(Node):
             Rd = Reye()
             wd = np.zeros(3)
             
-        else: 
-            t = (t-3) % 7
+        elif t < 10.0: 
+            t = t-3
             # Approach movement:
-            (s0, s0dot) = spline(t, 5.0, 0.0, 1.0, self.v, 0.0)
+            (s0, s0dot) = spline(t, 7.0, 0.0, 1.0, 0.0, 0.0)
             
             pd = self.pstart + (self.pend - self.pstart) * s0
             vd =           (self.pend - self.pstart) * s0dot
@@ -188,6 +188,8 @@ class DemoNode(Node):
             
             self.p = pd
             self.v = vd
+        else:
+           return None
             
         # Update the message and publish.
         self.marker.header.stamp  = self.now().to_msg()

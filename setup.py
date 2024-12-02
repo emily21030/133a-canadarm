@@ -13,6 +13,7 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/rviz', glob('rviz/*')),
         ('share/' + package_name + '/urdf', glob('urdf/*')),
+        ('share/' + package_name + '/launch', glob('launch/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -25,6 +26,7 @@ setup(
         'console_scripts': [
             'initial_movement = code.initial_movement:main',
             'ikin = code.ikin:main',
+            'ikin_node = code.ikin_node:main',
         ],
     },
 )
