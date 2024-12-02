@@ -1,6 +1,13 @@
 # 133a-canadarm
 Team repo for ME/CS 133a project. Clone this project into your ~/robotws/src/ directory on VM.
 
+## Current files to run!!!
+RVIZ: rviz/viewmarkers.rviz
+
+URDF: urdf/SSRMS_Canadarm2.urdf
+
+Python: code/ikin_node.py
+
 ### Major Update Meeting Notes 2024/12/02
 Notes:
 - Unable to setup/build ROS with launch in setup.py --> how to create launch files?
