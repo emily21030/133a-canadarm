@@ -95,9 +95,12 @@ class DemoNode(Node):
         # Initialize the ball position, velocity, set the acceleration.
         self.radius = 1.0
 
-        self.p = self.p0# np.array([0.0, 0.0, self.radius])
-        self.v = np.array([-0.5, -0.1,  -1.5       ])
+        self.p = np.array([15.0, 15.0, 10.0])
+        self.v = 2*np.array([-0.272, -0.866, -0.420       ])
         self.a = np.array([0.0, 0.0, 0.0      ])
+        
+        self.pstart = self.p
+        self.pend = self.p + self.v*10 # np.array([9.5, -2.5, 1.5])
 
         # Create the sphere marker.
         diam        = 2 * self.radius
@@ -121,6 +124,8 @@ class DemoNode(Node):
         self.create_timer(self.dt, self.update)
         self.get_logger().info("Running with dt of %f seconds (%fHz)" %
                                (self.dt, rate))
+                               
+        self.caught = False
         
 
     # Shutdown.
@@ -158,42 +163,36 @@ class DemoNode(Node):
         # self.marker.id += 1
         #####################
 
-        # Update the message and publish.
-        self.marker.header.stamp  = self.now().to_msg()
-        self.marker.pose.position = Point_from_p(self.p)
-        self.mpub.publish(self.markerarray)
-
         # Decide which phase we are in for the arm:
         if t < 3.0:
             # Approach movement:
+            
             (s0, s0dot) = goto(t, 3.0, 0.0, 1.0)
 
-            pd = self.p0 + (self.pright - self.p0) * s0
-            vd =           (self.pright - self.p0) * s0dot
+            pd = self.p0 + (self.pstart - self.p0) * s0
+            vd =           (self.pstart - self.p0) * s0dot
 
             Rd = Reye()
             wd = np.zeros(3)
             
         else: 
-            t = (t-3) % 10
-            if t < 5.0:
-                # Approach movement:
-                (s0, s0dot) = goto(t, 5.0, 0.0, 1.0)
-
-                pd = self.pright + (self.pleft - self.pright) * s0
-                vd =           (self.pleft - self.pright) * s0dot
+            t = (t-3) % 7
+            # Approach movement:
+            (s0, s0dot) = spline(t, 5.0, 0.0, 1.0, self.v, 0.0)
             
-            else:
-                (s0, s0dot) = goto(t-5, 5.0, 0.0, 1.0)
-
-                pd = self.pleft + (self.pright - self.pleft) * s0
-                vd =           (self.pright - self.pleft) * s0dot
-
-                Rd = Reye()
-                wd = np.zeros(3)
+            pd = self.pstart + (self.pend - self.pstart) * s0
+            vd =           (self.pend - self.pstart) * s0dot
 
             Rd = Reye()
             wd = np.zeros(3)
+            
+            self.p = pd
+            self.v = vd
+            
+        # Update the message and publish.
+        self.marker.header.stamp  = self.now().to_msg()
+        self.marker.pose.position = Point_from_p(self.p)
+        self.mpub.publish(self.markerarray)
 
         # Grab the last joint value and desired orientation.
         qdlast = self.qd
