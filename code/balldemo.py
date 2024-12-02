@@ -38,11 +38,11 @@ class DemoNode(Node):
             MarkerArray, '/visualization_marker_array', quality)
 
         # Initialize the ball position, velocity, set the acceleration.
-        self.radius = 0.5
-	    self.ws_radius = 17.0
+        self.radius = 0.1
+
         self.p = np.array([0.0, 0.0, self.radius])
-        self.v = np.array([1.0, 1.0,  1.0       ])
-        self.a = np.array([0.0, 0.0, 0.0     ])
+        self.v = np.array([1.0, 0.1,  5.0       ])
+        self.a = np.array([0.0, 0.0, -9.81      ])
 
         # Create the sphere marker.
         diam        = 2 * self.radius
@@ -56,7 +56,7 @@ class DemoNode(Node):
         self.marker.pose.orientation = Quaternion()
         self.marker.pose.position    = Point_from_p(self.p)
         self.marker.scale            = Vector3(x = diam, y = diam, z = diam)
-        self.marker.color            = ColorRGBA(r=1.0, g=1.0, b=1.0, a=1.0)
+        self.marker.color            = ColorRGBA(r=1.0, g=0.0, b=0.0, a=0.8)
         # a = 0.8 is slightly transparent!
 
         # Create the marker array message.

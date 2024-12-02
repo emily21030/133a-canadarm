@@ -1,7 +1,10 @@
-'''
-ikin.py
+'''ikin_node.py
 
-   This is initial ikin for initial movement of SSRMS Canadarm 2.
+   This is a demo for Canadarm2
+
+   Node:      /catch
+   Publish:   /joint_states             sensor_msgs.msg.JointState
+   Broadcast: 'pelvis' w.r.t. 'world'   geometry_msgs.msg.TransformStamped
 
 '''
 
@@ -10,25 +13,28 @@ import numpy as np
 
 from math import pi, sin, cos, acos, atan2, sqrt, fmod, exp
 
-# Grab the utilities
-from hw5code.GeneratorNode      import GeneratorNode
-from hw5code.TransformHelpers   import *
-from hw5code.TrajectoryUtils    import *
+from rclpy.node                 import Node
+from rclpy.time                 import Duration
+from tf2_ros                    import TransformBroadcaster
+from geometry_msgs.msg          import TransformStamped
+from sensor_msgs.msg            import JointState
 
-# Grab the general fkin from HW6 P1.
+from hw5code.TransformHelpers     import *
+from hw5code.TrajectoryUtils    import *
 from hw6code.KinematicChain     import KinematicChain
 
-# Ball demo imports
-
-from rclpy.node                 import Node
+# Marker liraries
 from rclpy.qos                  import QoSProfile, DurabilityPolicy
-from rclpy.time                 import Duration
 from geometry_msgs.msg          import Point, Vector3, Quaternion
 from std_msgs.msg               import ColorRGBA
 from visualization_msgs.msg     import Marker
 from visualization_msgs.msg     import MarkerArray
 
 
+#
+#   Canadarm2 Joint Names
+#
+jointnames = ['Shoulder_Roll', 'Shoulder_Yaw', 'Shoulder_Pitch', 'Elbow_Pitch', 'Wrist_Pitch', 'Wrist_Yaw', 'Wrist_Roll']
 
 
 #
@@ -40,36 +46,23 @@ class DemoNode(Node):
         # Initialize the node, naming it as specified
         super().__init__(name)
 
+        # Initialize the transform broadcaster
+        self.broadcaster = TransformBroadcaster(self)
+
+        # Add a publisher to send the joint commands.
+        self.jpub = self.create_publisher(JointState, '/joint_states', 10)
+
         # Prepare the publisher (latching for new subscribers).
         quality = QoSProfile(
             durability=DurabilityPolicy.TRANSIENT_LOCAL, depth=1)
-        self.pub = self.create_publisher(
+        self.mpub = self.create_publisher(
             MarkerArray, '/visualization_marker_array', quality)
 
-        # Initialize the ball position, velocity, set the acceleration.
-        self.radius = 0.1
-
-        self.p = np.array([0.0, 0.0, self.radius])
-        self.v = np.array([1.0, 0.1,  5.0       ])
-        self.a = np.array([0.0, 0.0, -9.81      ])
-
-        # Create the sphere marker.
-        diam        = 2 * self.radius
-        self.marker = Marker()
-        self.marker.header.frame_id  = "world"
-        self.marker.header.stamp     = self.get_clock().now().to_msg()
-        self.marker.action           = Marker.ADD
-        self.marker.ns               = "point"
-        self.marker.id               = 1
-        self.marker.type             = Marker.SPHERE
-        self.marker.pose.orientation = Quaternion()
-        self.marker.pose.position    = Point_from_p(self.p)
-        self.marker.scale            = Vector3(x = diam, y = diam, z = diam)
-        self.marker.color            = ColorRGBA(r=1.0, g=0.0, b=0.0, a=0.8)
-        # a = 0.8 is slightly transparent!
-
-        # Create the marker array message.
-        self.markerarray = MarkerArray(markers = [self.marker])
+        # Wait for a connection to happen.  This isn't necessary, but
+        # means we don't start until the rest of the system is ready.
+        self.get_logger().info("Waiting for a /joint_states subscriber...")
+        while(not self.count_subscribers('/joint_states')):
+            pass
 
         # Set up the timing so (t=0) will occur in the first update
         # cycle (dt) from now.
@@ -77,56 +70,9 @@ class DemoNode(Node):
         self.t     = -self.dt
         self.start = self.get_clock().now() + Duration(seconds=self.dt)
 
-        # Create a timer to keep calling update().
-        self.create_timer(self.dt, self.update)
-        self.get_logger().info("Running with dt of %f seconds (%fHz)" %
-                               (self.dt, rate))
-
-    # Shutdown
-    def shutdown(self):
-        # Destroy the node, including cleaning up the timer.
-        self.destroy_node()
-
-    # Return the current time (in ROS format).
-    def now(self):
-        return self.start + Duration(seconds=self.t)
-
-    # Update - send a new joint command every time step.
-    def update(self):
-        # To avoid any time jitter enforce a constant time step and
-        # integrate to get the current time.
-        self.t += self.dt
-
-        # Integrate the velocity, then the position.
-        self.v += self.dt * self.a
-        self.p += self.dt * self.v
-
-        # Check for a bounce - not the change in x velocity is non-physical.
-        if self.p[2] < self.radius:
-            self.p[2] = self.radius + (self.radius - self.p[2])
-            self.v[2] *= -1.0
-            self.v[0] *= -1.0   # Change x just for the fun of it!
-
-        # Update the ID number to create a new ball and leave the
-        # previous balls where they are.
-        #####################
-        self.marker.id += 1
-        #####################
-
-        # Update the message and publish.
-        self.marker.header.stamp  = self.now().to_msg()
-        self.marker.pose.position = Point_from_p(self.p)
-        self.pub.publish(self.markerarray)
-
-
-#
-#   Trajectory Class
-#
-class Trajectory():
-    # Initialization.
-    def __init__(self, node):
+        # Initialize ikin variables
         # Set up the kinematic chain object.
-        self.chain = KinematicChain(node, 'world', 'link_ee', self.jointnames())
+        self.chain = KinematicChain(self, 'world', 'link_ee', jointnames)
         
         # Define the various points.
         self.njoints = 7
@@ -146,16 +92,78 @@ class Trajectory():
         self.Rd = self.R0
         self.lam = 20
 
+        # Initialize the ball position, velocity, set the acceleration.
+        self.radius = 1.0
 
-    # Declare the joint names.
-    def jointnames(self):
-        # Return a list of joint names FOR THE EXPECTED URDF!
-        return ['Shoulder_Roll', 'Shoulder_Yaw', 'Shoulder_Pitch', 'Elbow_Pitch', 'Wrist_Pitch', 'Wrist_Yaw', 'Wrist_Roll']
+        self.p = self.p0# np.array([0.0, 0.0, self.radius])
+        self.v = np.array([-0.5, -0.1,  -1.5       ])
+        self.a = np.array([0.0, 0.0, 0.0      ])
 
-    # Evaluate at the given time.  This was last called (dt) ago.
-    def evaluate(self, t, dt):
+        # Create the sphere marker.
+        diam        = 2 * self.radius
+        self.marker = Marker()
+        self.marker.header.frame_id  = "world"
+        self.marker.header.stamp     = self.get_clock().now().to_msg()
+        self.marker.action           = Marker.ADD
+        self.marker.ns               = "point"
+        self.marker.id               = 1
+        self.marker.type             = Marker.SPHERE
+        self.marker.pose.orientation = Quaternion()
+        self.marker.pose.position    = Point_from_p(self.p)
+        self.marker.scale            = Vector3(x = diam, y = diam, z = diam)
+        self.marker.color            = ColorRGBA(r=1.0, g=0.0, b=0.0, a=0.8)
+        # a = 0.8 is slightly transparent!
+
+        # Create the marker array message.
+        self.markerarray = MarkerArray(markers = [self.marker])
+
+        # Create a timer to keep calling update().
+        self.create_timer(self.dt, self.update)
+        self.get_logger().info("Running with dt of %f seconds (%fHz)" %
+                               (self.dt, rate))
         
-        # Decide which phase we are in:
+
+    # Shutdown.
+    def shutdown(self):
+        # Destroy the node, including cleaning up the timer.
+        self.destroy_node()
+
+    # Return the current time (in ROS format).
+    def now(self):
+        return self.start + Duration(seconds=self.t)
+
+    # Update - send a new joint command every time step.
+    def update(self):
+        # To avoid any time jitter enforce a constant time step and
+        # integrate to get the current time.
+        self.t += self.dt
+
+        t = self.t
+        dt = self.dt
+
+        # For the ball, Integrate the velocity, then the position.
+        self.v += self.dt * self.a
+        self.p += self.dt * self.v
+
+        # Check for paddle
+        # Check for a bounce - not the change in x velocity is non-physical.
+        # if self.p[2] < self.radius:
+        #     self.p[2] = self.radius + (self.radius - self.p[2])
+        #     self.v[2] *= -1.0
+        #     self.v[0] *= -1.0   # Change x just for the fun of it!
+
+        # Update the ID number to create a new ball and leave the
+        # previous balls where they are.
+        #####################
+        # self.marker.id += 1
+        #####################
+
+        # Update the message and publish.
+        self.marker.header.stamp  = self.now().to_msg()
+        self.marker.pose.position = Point_from_p(self.p)
+        self.mpub.publish(self.markerarray)
+
+        # Decide which phase we are in for the arm:
         if t < 3.0:
             # Approach movement:
             (s0, s0dot) = goto(t, 3.0, 0.0, 1.0)
@@ -213,8 +221,14 @@ class Trajectory():
         self.qd = qd
         self.Rd = Rd
 
-        # Return the desired joint and task (position/orientation) pos/vel.
-        return (qd, qddot, pd, vd, Rd, wd)
+        # Build up a command message and publish.
+        cmdmsg = JointState()
+        cmdmsg.header.stamp = self.now().to_msg()       # Current time for ROS
+        cmdmsg.name         = jointnames                # List of names
+        cmdmsg.position     = qd.flatten().tolist()      # List of positions
+        cmdmsg.velocity     = qddot.flatten().tolist()   # List of velocities
+        self.jpub.publish(cmdmsg)
+
 
 
 #
@@ -223,22 +237,13 @@ class Trajectory():
 def main(args=None):
     # Initialize ROS and the demo node (100Hz).
     rclpy.init(args=args)
-    # node = DemoNode('balldemo', 100)
+    node = DemoNode('catch', 100)
 
-    # Initialize the generator node for 100Hz udpates, using the above
-    # Trajectory class.
-    generator = GeneratorNode('generator', 100, Trajectory)
-
-    # Run until interrupted.
-    # rclpy.spin(node)
-
-    # Spin, meaning keep running (taking care of the timer callbacks
-    # and message passing), until interrupted or the trajectory ends.
-    generator.spin()
+    # Spin, until interrupted.
+    rclpy.spin(node)
 
     # Shutdown the node and ROS.
-    # node.shutdown()
-    generator.shutdown()
+    node.shutdown()
     rclpy.shutdown()
 
 if __name__ == "__main__":

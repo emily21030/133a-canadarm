@@ -1,6 +1,11 @@
 # 133a-canadarm
 Team repo for ME/CS 133a project. Clone this project into your ~/robotws/src/ directory on VM.
 
+### Major Update Meeting Notes 2024/12/02
+Notes:
+- Unable to setup/build ROS with launch in setup.py --> how to create launch files?
+
+
 ### Preliminary Update Meeting Notes 2024/11/25
 Notes:
 - Able to view .urdf and have some movement with the Canadarm
