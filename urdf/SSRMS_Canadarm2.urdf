@@ -477,15 +477,15 @@ The link CoM locations (with respect to link frame) are set to zero as the inert
 
   <!-- *** Attach a sphere to the tip *** -->
 
-  <joint name="attach-sphere" type="fixed">
+  <joint name="attach-paddle" type="fixed">
     <parent link="link_ee"/>
-    <child  link="sphere"/>
+    <child  link="paddle"/>
   </joint>
-  <link name="sphere">				<!-- Frame with sphere -->
+  <link name="paddle">				<!-- Frame with sphere -->
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>		<!-- Center of sphere -->
       <geometry>
-	<sphere radius="0.2" />			<!-- Size of sphere -->
+	<cylinder radius="0.5" length="0.1" />			<!-- Size of sphere -->
       </geometry>
       <material name="green"/>			<!-- Color -->
     </visual>
