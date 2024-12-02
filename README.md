@@ -15,15 +15,18 @@ Feedback:
 - Gazebo is for forces, physics engine and rendering, we should not use it M1 cannot run it
 
 Tasks:
+
 Emily:
 - Use weighted Jacobian to handle ikin near singularities
 - End effector: Spherical velcro ball or paddle with velcro (to introduce orientation)
+  
 Emily and Kim:
 - Implement as mechanism to 'turn on/off electromagnet' where 'on' tracks asteroid location with robot tip
   - Create deceleration of asteroid by saying velocity should slow down while arm is in contact with asteroid
   - Spline: slow, speed up to match speed of asteroid at location, and slow down to stopped
   - Pick meeting location that is at earliest point of intersection in workspace and slow to stop at last point of intersection (maximize contact with asteroid) --> render the asteroid outside of the workspace at first
     - ^ Solve the singularity problem
+
 Jimmy:
 - Render asteroid and randomize movement
   - Send this separate from .urdf --> look at ball demo, and grab useful pieces into our code
