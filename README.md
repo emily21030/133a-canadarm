@@ -8,10 +8,19 @@ URDF: urdf/SSRMS_Canadarm2.urdf
 
 Python: code/ikin_node.py
 
-### Major Update Meeting Notes 2024/12/02
+### SOS OH Meeting Notes 2024/12/02
 Notes:
 - Unable to setup/build ROS with launch in setup.py --> how to create launch files?
 
+Feedback:
+- Random asteroid trajectory:
+  - Pick intersection point and randomize angle of opening (over [5º, 90º], [-5º, -90º]) from line between starting point and origin (middle of robot)
+  - OR pick random starting position/velocity of asteroid, then compute intersection of asteroid with work space
+  - OR pick random starting position of asteroid, randomize inner circle radius (over defined min/max radius) and follow path of tangential chord from intersection point to inner circle
+      - Solve for intersection point of asteroid with work space in this case
+- Catching movement:
+  - goto() to go to intersection/catching point
+  - spline(v0=v, vf=0) to decelerate astseroid
 
 ### Preliminary Update Meeting Notes 2024/11/25
 Notes:
