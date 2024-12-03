@@ -8,6 +8,16 @@ URDF: urdf/SSRMS_Canadarm2.urdf
 
 Python: code/ikin_node.py
 
+### Major Update Meeting Notes 2024/12/02
+Feedback:
+- Orientation is already specified in zero pos., now just need to specify orientation to be perpendicular to the paddle
+  - Extra thought: specify normal vector (2 DOF), not all 3 DOFs of tip orientation --> 5 (= 3 pos. + 2 orientation) x7 Jacobian
+- Approximate the work space as a sphere, don't need to deal with problem of solving for where the singularities are 
+- Next steps:
+  - Randomize asteroid trajectory
+  - Secondary task chicken dance elbow to avoid asteroid
+- Final report: explain trade-offs and reasonings for decision/design in our robot
+
 ### SOS OH Meeting Notes 2024/12/02
 Notes:
 - Unable to setup/build ROS with launch in setup.py --> how to create launch files?
