@@ -9,7 +9,7 @@ Panels:
         - /RobotModel1/Description Topic1
         - /TF1/Frames1
       Splitter Ratio: 0.5
-    Tree Height: 546
+    Tree Height: 549
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -53,7 +53,7 @@ Visualization Manager:
       Enabled: true
       Name: MarkerArray
       Namespaces:
-        {}
+        point: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -102,11 +102,91 @@ Visualization Manager:
       Enabled: true
       Links:
         All Links Enabled: true
+        B1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        B2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        B3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        B4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        B5:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        B6:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        B7:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        B8:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        cube:
+        lcub:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lcub-xm:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lcub-xp:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lcub-ym:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lcub-yp:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lcub-zm:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lcub-zp:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        link_ee:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        paddle:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -115,6 +195,7 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
@@ -128,7 +209,39 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        cube:
+        B1:
+          Value: true
+        B2:
+          Value: true
+        B3:
+          Value: true
+        B4:
+          Value: true
+        B5:
+          Value: true
+        B6:
+          Value: true
+        B7:
+          Value: true
+        B8:
+          Value: true
+        lcub:
+          Value: true
+        lcub-xm:
+          Value: true
+        lcub-xp:
+          Value: true
+        lcub-ym:
+          Value: true
+        lcub-yp:
+          Value: true
+        lcub-zm:
+          Value: true
+        lcub-zp:
+          Value: true
+        link_ee:
+          Value: true
+        paddle:
           Value: true
         world:
           Value: true
@@ -139,8 +252,30 @@ Visualization Manager:
       Show Names: false
       Tree:
         world:
-          cube:
-            {}
+          B1:
+            B2:
+              B3:
+                B4:
+                  B5:
+                    B6:
+                      B7:
+                        B8:
+                          link_ee:
+                            paddle:
+                              {}
+          lcub:
+            lcub-xm:
+              {}
+            lcub-xp:
+              {}
+            lcub-ym:
+              {}
+            lcub-yp:
+              {}
+            lcub-zm:
+              {}
+            lcub-zp:
+              {}
       Update Interval: 0
       Value: true
   Enabled: true
@@ -189,7 +324,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 2.6592087745666504
+      Distance: 41.77503967285156
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -204,10 +339,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6003980040550232
+      Pitch: 0.45039790868759155
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.9753978252410889
+      Yaw: 0.44040122628211975
     Saved: ~
 Window Geometry:
   Displays:
@@ -215,7 +350,7 @@ Window Geometry:
   Height: 846
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd000000040000000000000156000002aefc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003e000002ae000000ca00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f000002aefc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003e000002ae000000a600fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004b00000003efc0100000002fb0000000800540069006d00650100000000000004b0000002c600fffffffb0000000800540069006d0065010000000000000450000000000000000000000354000002ae00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd000000040000000000000156000002b0fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d000002b0000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f000002aefc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003e000002ae000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004b00000003efc0100000002fb0000000800540069006d00650100000000000004b0000002fb00fffffffb0000000800540069006d0065010000000000000450000000000000000000000354000002b000000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -226,4 +361,4 @@ Window Geometry:
     collapsed: false
   Width: 1200
   X: 333
-  Y: 90
+  Y: 32

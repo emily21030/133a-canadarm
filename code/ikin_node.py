@@ -19,7 +19,7 @@ from tf2_ros                    import TransformBroadcaster
 from geometry_msgs.msg          import TransformStamped
 from sensor_msgs.msg            import JointState
 
-from hw5code.TransformHelpers     import *
+from code.TransformHelpers     import *
 from hw5code.TrajectoryUtils    import *
 from hw6code.KinematicChain     import KinematicChain
 
@@ -92,15 +92,41 @@ class DemoNode(Node):
         self.Rd = self.R0
         self.lam = 20
 
-        # Initialize the ball position, velocity, set the acceleration.
-        self.radius = 1.0
+        # Initialize the ball position, angle parameters, workspace parameters, velocity, set the acceleration.
+        self.r_spawn = 25
+        self.ws_i = 5
+        self.ws_o = 15
+        self.theta_i = np.arcsin(self.ws_i/self.r_spawn)
+        self.theta_o = np.arcsin(self.ws_o/self.r_spawn)
+        self.theta_m = (self.theta_i + self. theta_o)/2
 
-        self.p = np.array([15.0, 15.0, 10.0])
-        self.v = 2*np.array([-0.272, -0.866, -0.420       ])
+        self.radius = 1.0
+        self.speed = 2
+
+        #generate random unit vector for ball spawn
+        v = np.random.rand(3) - 0.5
+        mag = np.linalg.norm(v)
+        v_hat = v/mag
+
+        self.p = self.r_spawn * v_hat
+
+        # Generate random angle to add
+        rand = np.random.uniform(self.theta_i, self.theta_m)
+        p_m = [-1, 1]
+        mult = np.random.choice(p_m)
+        rand_angle = rand * mult
+        rotation = Rotx(rand_angle)
+
+        a_to_o = -self.p/np.linalg.norm(self.p)
+        direction = a_to_o @ rotation
+
+        # set ball velocity 
+        self.v = self.speed*direction
         self.a = np.array([0.0, 0.0, 0.0      ])
         
+        # define starting and ending points for the ball
         self.pstart = self.p
-        self.pend = self.p + self.v*10 # np.array([9.5, -2.5, 1.5])
+        self.pend = self.p + self.v*15 # np.array([9.5, -2.5, 1.5])
 
         # Create the sphere marker.
         diam        = 2 * self.radius
@@ -175,10 +201,10 @@ class DemoNode(Node):
             Rd = Reye()
             wd = np.zeros(3)
             
-        elif t < 10.0: 
+        elif t < 15.0: 
             t = t-3
-            # Approach movement:
-            (s0, s0dot) = spline(t, 7.0, 0.0, 1.0, 0.0, 0.0)
+            # Final movement:
+            (s0, s0dot) = spline(t, 12.0, 0.0, 1.0, 0.0, 0.0)
             
             pd = self.pstart + (self.pend - self.pstart) * s0
             vd =           (self.pend - self.pstart) * s0dot
@@ -186,10 +212,43 @@ class DemoNode(Node):
             Rd = Reye()
             wd = np.zeros(3)
             
+            # attach ball to arm trajectory
             self.p = pd
             self.v = vd
         else:
-           return None
+            
+            '''#generate new ball
+            v = np.random.rand(3) - 0.5
+            mag = np.linalg.norm(v)
+            v_hat = v/mag
+
+            self.p = self.r_spawn * v_hat
+            # Generate random angle
+            rand = np.random.uniform(self.theta_i, self.theta_m)
+            p_m = [-1, 1]
+            mult = np.random.choice(p_m)
+            rand_angle = rand * mult
+            rotation = Rotx(rand_angle)
+
+            a_to_o = -self.p/np.linalg.norm(self.p)
+            direction = a_to_o @ rotation
+
+            self.v = self.speed*direction
+
+            # set update values (or else error)
+            (s0, s0dot) = goto(t, 3.0, 0.0, 1.0)
+
+            pd = self.p0 + (self.pstart - self.p0) * s0
+            vd =           (self.pstart - self.p0) * s0dot
+
+            Rd = Reye()
+            wd = np.zeros(3)
+
+            #reset timer
+            self.t = 0'''
+
+            return None
+
             
         # Update the message and publish.
         self.marker.header.stamp  = self.now().to_msg()
@@ -209,7 +268,7 @@ class DemoNode(Node):
         
         xr_dot = np.concatenate((vr, wr))
         J = np.vstack((Jv, Jw))
-        gamma = 0.5
+        gamma = 0.7
         J_Winv = np.linalg.inv(np.transpose(J)@J + gamma**2*np.eye(7))@np.transpose(J)
         
         qddot = J_Winv@xr_dot
