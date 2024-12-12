@@ -50,7 +50,7 @@ The link CoM locations (with respect to link frame) are set to zero as the inert
       <geometry>
         <box size="1.5 2 1" />
       </geometry>
-      <material name="Grey"/>
+      <material name="gray"/>
     </visual>
   </link>
 
@@ -78,7 +78,7 @@ The link CoM locations (with respect to link frame) are set to zero as the inert
       <geometry>
         <cylinder radius="0.06" length="1.3589"/>
       </geometry>
-      <material name="Blue"/>
+      <material name="white"/>
     </visual>
 
   </link>
@@ -106,7 +106,7 @@ The link CoM locations (with respect to link frame) are set to zero as the inert
       <geometry>
         <cylinder radius="0.06" length="0.7026"/>
       </geometry>
-      <material name="Blue"/>
+      <material name="white"/>
     </visual>
 
     <visual>
@@ -142,7 +142,7 @@ The link CoM locations (with respect to link frame) are set to zero as the inert
       <geometry>
         <cylinder radius="0.06" length="0.5692"/>
       </geometry>
-      <material name="Blue"/>
+      <material name="white"/>
     </visual>
 
     <visual>
@@ -178,7 +178,7 @@ The link CoM locations (with respect to link frame) are set to zero as the inert
       <geometry>
         <cylinder radius="0.06" length="7.11"/>
       </geometry>
-      <material name="Blue"/>
+      <material name="white"/>
     </visual>
 
     <visual>
@@ -186,7 +186,7 @@ The link CoM locations (with respect to link frame) are set to zero as the inert
       <geometry>
         <cylinder radius="0.06" length="0.475"/>
       </geometry>
-      <material name="Blue"/>
+      <material name="white"/>
     </visual>
 
     <visual>
@@ -222,7 +222,7 @@ The link CoM locations (with respect to link frame) are set to zero as the inert
       <geometry>
         <cylinder radius="0.06" length="7.11"/>
       </geometry>
-      <material name="Blue"/>
+      <material name="white"/>
     </visual>
 
     <visual>
@@ -258,7 +258,7 @@ The link CoM locations (with respect to link frame) are set to zero as the inert
       <geometry>
         <cylinder radius="0.06" length="0.5692"/>
       </geometry>
-      <material name="Blue"/>
+      <material name="white"/>
     </visual>
 
     <visual>
@@ -294,7 +294,7 @@ The link CoM locations (with respect to link frame) are set to zero as the inert
       <geometry>
         <cylinder radius="0.06" length="0.7026"/>
       </geometry>
-      <material name="Blue"/>
+      <material name="white"/>
     </visual>
 
     <visual>
@@ -330,7 +330,7 @@ The link CoM locations (with respect to link frame) are set to zero as the inert
       <geometry>
         <cylinder radius="0.06" length="1.3589"/>
       </geometry>
-      <material name="Blue"/>
+      <material name="white"/>
     </visual>
 
     <visual>
@@ -487,7 +487,7 @@ The link CoM locations (with respect to link frame) are set to zero as the inert
       <geometry>
 	<cylinder radius="0.5" length="0.1" />			<!-- Size of sphere -->
       </geometry>
-      <material name="green"/>			<!-- Color -->
+      <material name="orange"/>			<!-- Color -->
     </visual>
   </link>
 

@@ -97,7 +97,7 @@ class DemoNode(Node):
         self.marker.ns               = "point"
         self.marker.id               = 1
         self.marker.type             = Marker.SPHERE
-        self.marker.color            = ColorRGBA(r=0.5, g=0.5, b=0.5,  a=1.0)
+        self.marker.color            = ColorRGBA(r=0.9, g=0.85, b=0.76,  a=1.0)
 
         # Initialize ball position and calculate arm traj. for catching
         self.t0 = 0
