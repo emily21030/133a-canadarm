@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /RobotModel1
         - /RobotModel1/Description Topic1
         - /TF1/Frames1
       Splitter Ratio: 0.5
@@ -280,7 +281,7 @@ Visualization Manager:
       Value: true
   Enabled: true
   Global Options:
-    Background Color: 48; 48; 48
+    Background Color: 0; 0; 0
     Fixed Frame: world
     Frame Rate: 10
   Name: root
@@ -360,5 +361,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 333
-  Y: 32
+  X: 379
+  Y: 86

@@ -97,11 +97,11 @@ class DemoNode(Node):
         self.marker.ns               = "point"
         self.marker.id               = 1
         self.marker.type             = Marker.SPHERE
-        self.marker.color            = ColorRGBA(r=1.0, g=0.0, b=0.0, a=0.8)
+        self.marker.color            = ColorRGBA(r=0.5, g=0.5, b=0.5,  a=1.0)
 
         # Initialize ball position and calculate arm traj. for catching
         self.t0 = 0
-        self.init_ball()
+        self.init_ball("random")
 
         diam        = 2 * self.radius
 
@@ -120,7 +120,7 @@ class DemoNode(Node):
                                
         self.caught = False
         
-    def init_ball(self):
+    def init_ball(self, mode):
         # Initialize the ball position, angle parameters, workspace parameters, velocity, set the acceleration.
         self.r_spawn = 30
         self.ws_i = 5
@@ -129,8 +129,10 @@ class DemoNode(Node):
         self.theta_o = np.arcsin(self.ws_o/self.r_spawn)
         self.theta_m = (self.theta_i + self. theta_o)/2
 
+        self.range = 1.0
+
         self.radius = 0.5
-        self.speed = 10
+        self.speed = np.random.uniform(10, 15)
 
         #generate random unit vector for ball spawn
         v = np.random.rand(3) - 0.5
@@ -138,13 +140,32 @@ class DemoNode(Node):
         v_hat = v/mag
 
         self.p = self.r_spawn * v_hat
+        
+        if mode == "random":
 
-        # Generate random angle to add
-        rand = np.random.uniform(self.theta_i, self.theta_m)
-        p_m = [-1, 1]
-        mult = np.random.choice(p_m)
-        rand_angle = rand * mult
-        rotation = Rotx(rand_angle)
+            # Generate random angle to add
+            rand = np.random.uniform(self.theta_i, self.theta_m)
+            p_m = [-1, 1]
+            mult = np.random.choice(p_m)
+            rand_angle = rand * mult
+            rotation = Rotx(rand_angle)
+
+
+        elif mode == "outer":
+
+            # Generate angle on outer diameter
+            rotation = Rotx(self.theta_o)
+
+        elif mode == "inner":
+
+            rotation = Rotx(0)
+            self.range = 0.6
+
+        else:
+            print("Error: no ball generator mode selected")
+            return None
+
+        
 
         a_to_o = -self.p/np.linalg.norm(self.p)
         self.direction = a_to_o @ rotation
@@ -163,7 +184,7 @@ class DemoNode(Node):
         self.tend = (-B+np.sqrt(B**2-4*A*C))/(2*A)
         
         self.pstart = self.p + self.v*self.tstart
-        self.pend = self.p + self.v*self.tend # np.array([9.5, -2.5, 1.5])
+        self.pend = self.p + self.v*self.tend*self.range
 
         # define desired position of paddle w/ radius offset from ball
         self.paddle_start = self.pstart+self.radius*self.direction
@@ -247,39 +268,7 @@ class DemoNode(Node):
             # Reset simulation values
             self.t0 = self.t
             self.p0 = self.paddle_end
-            self.init_ball()
-            
-        #     #generate new ball
-        #     v = np.random.rand(3) - 0.5
-        #     mag = np.linalg.norm(v)
-        #     v_hat = v/mag
-
-        #     self.p = self.r_spawn * v_hat
-        #     # Generate random angle
-        #     rand = np.random.uniform(self.theta_i, self.theta_m)
-        #     p_m = [-1, 1]
-        #     mult = np.random.choice(p_m)
-        #     rand_angle = rand * mult
-        #     rotation = Rotx(rand_angle)
-
-        #     a_to_o = -self.p/np.linalg.norm(self.p)
-        #     self.direction = a_to_o @ rotation
-
-        #     self.v = self.speed*self.direction
-
-        #     # set update values (or else error)
-        #     (s0, s0dot) = goto(t, 3.0, 0.0, 1.0)
-
-        #     pd = self.p0 + (self.pstart - self.p0) * s0
-        #     vd =           (self.pstart - self.p0) * s0dot
-
-        #     Rd = Reye()
-        #     wd = np.zeros(3)
-
-        #     #reset timer
-        #     self.t = 0
-
-        #     # return None
+            self.init_ball("outer")
 
             
         # Update the message and publish.
@@ -340,7 +329,7 @@ class DemoNode(Node):
 def main(args=None):
     # Initialize ROS and the demo node (100Hz).
     rclpy.init(args=args)
-    node = DemoNode('catch', 100)
+    node = DemoNode('catch', 200)
 
     # Spin, until interrupted.
     rclpy.spin(node)
