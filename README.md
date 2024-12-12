@@ -8,6 +8,14 @@ URDF: urdf/SSRMS_Canadarm2.urdf
 
 Python: code/ikin_node.py
 
+### Final Update Meeting Notes 2024/12/02
+Feedback:
+- In report, explain how many extreme cases it can handle (ex. asteroid path going off to singularity)? Show it off
+  - Need secondary tasks, show how to handle edge cases, examples of different asteroid scenarios
+  - Less hard coding, more letting the arm figure it out
+- Robot arm reset message: ROS2 timestamps messages, might be ignoring data if we reset time t
+  - Offset time by using t-t0 where t0 is saved at the start of each new asteroid trajectory
+
 ### Major Update Meeting Notes 2024/12/02
 Feedback:
 - Orientation is already specified in zero pos., now just need to specify orientation to be perpendicular to the paddle
