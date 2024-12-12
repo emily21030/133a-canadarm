@@ -23,7 +23,7 @@ from code.TransformHelpers     import *
 from hw5code.TrajectoryUtils    import *
 from hw6code.KinematicChain     import KinematicChain
 
-# Marker liraries
+# Marker libraries
 from rclpy.qos                  import QoSProfile, DurabilityPolicy
 from geometry_msgs.msg          import Point, Vector3, Quaternion
 from std_msgs.msg               import ColorRGBA
@@ -80,9 +80,6 @@ class DemoNode(Node):
         self.p0 = np.array([17.688, 1.6134, 0.0])
         self.R0 = Reye()
 
-        self.pleft = np.array([5.127, 1.3999, 15.698])
-        self.pright  = np.array([0.63958, 0.19806, -0.4366])
-
         self.Rleft = Reye()
         self.Rright = Reye()
 
@@ -92,16 +89,48 @@ class DemoNode(Node):
         self.Rd = self.R0
         self.lam = 20
 
+        # Create the sphere marker.
+        self.marker = Marker()
+        self.marker.header.frame_id  = "world"
+        self.marker.header.stamp     = self.get_clock().now().to_msg()
+        self.marker.action           = Marker.ADD
+        self.marker.ns               = "point"
+        self.marker.id               = 1
+        self.marker.type             = Marker.SPHERE
+        self.marker.color            = ColorRGBA(r=1.0, g=0.0, b=0.0, a=0.8)
+
+        # Initialize ball position and calculate arm traj. for catching
+        self.t0 = 0
+        self.init_ball()
+
+        diam        = 2 * self.radius
+
+        self.marker.pose.orientation = Quaternion()
+        # self.marker.pose.position    = Point_from_p(self.p)
+        self.marker.scale            = Vector3(x = diam, y = diam, z = diam)
+        # a = 0.8 is slightly transparent!
+
+        # Create the marker array message.
+        self.markerarray = MarkerArray(markers = [self.marker])
+
+        # Create a timer to keep calling update().
+        self.create_timer(self.dt, self.update)
+        self.get_logger().info("Running with dt of %f seconds (%fHz)" %
+                               (self.dt, rate))
+                               
+        self.caught = False
+        
+    def init_ball(self):
         # Initialize the ball position, angle parameters, workspace parameters, velocity, set the acceleration.
-        self.r_spawn = 25
+        self.r_spawn = 30
         self.ws_i = 5
         self.ws_o = 15
         self.theta_i = np.arcsin(self.ws_i/self.r_spawn)
         self.theta_o = np.arcsin(self.ws_o/self.r_spawn)
         self.theta_m = (self.theta_i + self. theta_o)/2
 
-        self.radius = 1.0
-        self.speed = 2
+        self.radius = 0.5
+        self.speed = 10
 
         #generate random unit vector for ball spawn
         v = np.random.rand(3) - 0.5
@@ -118,41 +147,30 @@ class DemoNode(Node):
         rotation = Rotx(rand_angle)
 
         a_to_o = -self.p/np.linalg.norm(self.p)
-        direction = a_to_o @ rotation
+        self.direction = a_to_o @ rotation
 
         # set ball velocity 
-        self.v = self.speed*direction
+        self.v = self.speed*self.direction
         self.a = np.array([0.0, 0.0, 0.0      ])
         
         # define starting and ending points for the ball
-        self.pstart = self.p
-        self.pend = self.p + self.v*15 # np.array([9.5, -2.5, 1.5])
 
-        # Create the sphere marker.
-        diam        = 2 * self.radius
-        self.marker = Marker()
-        self.marker.header.frame_id  = "world"
-        self.marker.header.stamp     = self.get_clock().now().to_msg()
-        self.marker.action           = Marker.ADD
-        self.marker.ns               = "point"
-        self.marker.id               = 1
-        self.marker.type             = Marker.SPHERE
-        self.marker.pose.orientation = Quaternion()
-        self.marker.pose.position    = Point_from_p(self.p)
-        self.marker.scale            = Vector3(x = diam, y = diam, z = diam)
-        self.marker.color            = ColorRGBA(r=1.0, g=0.0, b=0.0, a=0.8)
-        # a = 0.8 is slightly transparent!
+        A = np.linalg.norm(self.v)**2
+        B = 2*np.dot(self.p, self.v)
+        C = np.linalg.norm(self.p)**2-(15)**2
 
-        # Create the marker array message.
-        self.markerarray = MarkerArray(markers = [self.marker])
-
-        # Create a timer to keep calling update().
-        self.create_timer(self.dt, self.update)
-        self.get_logger().info("Running with dt of %f seconds (%fHz)" %
-                               (self.dt, rate))
-                               
-        self.caught = False
+        self.tstart = (-B-np.sqrt(B**2-4*A*C))/(2*A)
+        self.tend = (-B+np.sqrt(B**2-4*A*C))/(2*A)
         
+        self.pstart = self.p + self.v*self.tstart
+        self.pend = self.p + self.v*self.tend # np.array([9.5, -2.5, 1.5])
+
+        # define desired position of paddle w/ radius offset from ball
+        self.paddle_start = self.pstart+self.radius*self.direction
+        self.paddle_end = self.pend+self.radius*self.direction
+
+        self.marker.pose.position    = Point_from_p(self.p)
+
 
     # Shutdown.
     def shutdown(self):
@@ -169,14 +187,9 @@ class DemoNode(Node):
         # integrate to get the current time.
         self.t += self.dt
 
-        t = self.t
+        t = self.t - self.t0
         dt = self.dt
 
-        # For the ball, Integrate the velocity, then the position.
-        self.v += self.dt * self.a
-        self.p += self.dt * self.v
-
-        # Check for paddle
         # Check for a bounce - not the change in x velocity is non-physical.
         # if self.p[2] < self.radius:
         #     self.p[2] = self.radius + (self.radius - self.p[2])
@@ -190,64 +203,83 @@ class DemoNode(Node):
         #####################
 
         # Decide which phase we are in for the arm:
-        if t < 3.0:
+        if t < self.tstart:
             # Approach movement:
             
-            (s0, s0dot) = goto(t, 3.0, 0.0, 1.0)
+            # (s0, s0dot) = goto(t, 3.0, 0.0, 1.0) 
 
-            pd = self.p0 + (self.pstart - self.p0) * s0
-            vd =           (self.pstart - self.p0) * s0dot
+            # pd = self.p0 + (self.paddle_start - self.p0) * s0
+            # vd =           (self.paddle_start - self.p0) * s0dot
+
+            (pd, vd) = goto(t, self.tstart, self.p0, self.paddle_start)
 
             Rd = Reye()
             wd = np.zeros(3)
-            
-        elif t < 15.0: 
-            t = t-3
-            # Final movement:
-            (s0, s0dot) = spline(t, 12.0, 0.0, 1.0, 0.0, 0.0)
-            
-            pd = self.pstart + (self.pend - self.pstart) * s0
-            vd =           (self.pend - self.pstart) * s0dot
 
+            # For the ball, Integrate the velocity, then the position.
+            self.v += self.dt * self.a
+            self.p += self.dt * self.v
+            
+        # elif t < 15.0: 
+        elif t < self.tend:
+            # Final movement:
+            # (s0, s0dot) = spline(t-t0, 15.0-t0, 0.0, 1.0, 0.0, 0.0)
+            
+            # pd = self.paddle_start + (self.paddle_end - self.paddle_start) * s0
+            # vd =           (self.paddle_end - self.paddle_start) * s0dot
+
+            (pd, vd) = spline(t-self.tstart, self.tend-self.tstart, self.paddle_start, self.paddle_end, self.v, np.zeros(3))
+            
             Rd = Reye()
             wd = np.zeros(3)
             
             # attach ball to arm trajectory
-            self.p = pd
+            self.p = pd - self.radius*self.direction
             self.v = vd
+
         else:
-            
-            #generate new ball
-            v = np.random.rand(3) - 0.5
-            mag = np.linalg.norm(v)
-            v_hat = v/mag
-
-            self.p = self.r_spawn * v_hat
-            # Generate random angle
-            rand = np.random.uniform(self.theta_i, self.theta_m)
-            p_m = [-1, 1]
-            mult = np.random.choice(p_m)
-            rand_angle = rand * mult
-            rotation = Rotx(rand_angle)
-
-            a_to_o = -self.p/np.linalg.norm(self.p)
-            direction = a_to_o @ rotation
-
-            self.v = self.speed*direction
-
-            # set update values (or else error)
-            (s0, s0dot) = goto(t, 3.0, 0.0, 1.0)
-
-            pd = self.p0 + (self.pstart - self.p0) * s0
-            vd =           (self.pstart - self.p0) * s0dot
-
+            # Leave ball at rest for this timestep
+            pd = self.paddle_end
+            vd = np.zeros(3)
             Rd = Reye()
             wd = np.zeros(3)
 
-            #reset timer
-            self.t = 0
+            # Reset simulation values
+            self.t0 = self.t
+            self.p0 = self.paddle_end
+            self.init_ball()
+            
+        #     #generate new ball
+        #     v = np.random.rand(3) - 0.5
+        #     mag = np.linalg.norm(v)
+        #     v_hat = v/mag
 
-            # return None
+        #     self.p = self.r_spawn * v_hat
+        #     # Generate random angle
+        #     rand = np.random.uniform(self.theta_i, self.theta_m)
+        #     p_m = [-1, 1]
+        #     mult = np.random.choice(p_m)
+        #     rand_angle = rand * mult
+        #     rotation = Rotx(rand_angle)
+
+        #     a_to_o = -self.p/np.linalg.norm(self.p)
+        #     self.direction = a_to_o @ rotation
+
+        #     self.v = self.speed*self.direction
+
+        #     # set update values (or else error)
+        #     (s0, s0dot) = goto(t, 3.0, 0.0, 1.0)
+
+        #     pd = self.p0 + (self.pstart - self.p0) * s0
+        #     vd =           (self.pstart - self.p0) * s0dot
+
+        #     Rd = Reye()
+        #     wd = np.zeros(3)
+
+        #     #reset timer
+        #     self.t = 0
+
+        #     # return None
 
             
         # Update the message and publish.
@@ -268,13 +300,13 @@ class DemoNode(Node):
         
         # convert to tip frame
         n_isol = np.array([[1, 0, 0], [0, 1, 0]])
-        Jn_tip = np.transpose(R)@Jw
+        Jn_tip = n_isol@np.transpose(R)@Jw
         
         p_norm = np.array([0, 0, 1])
         n = R@p_norm
         nd = (-1)*self.v
         en = cross(n, nd)
-        nrdot_tip = np.transpose(R)@nd+self.lam*en
+        nrdot_tip = n_isol@(np.transpose(R)@nd+self.lam*en)
 
         
         xr_dot = np.concatenate((vr, nrdot_tip))
