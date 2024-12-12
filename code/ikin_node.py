@@ -268,17 +268,17 @@ class DemoNode(Node):
         
         # convert to tip frame
         n_isol = np.array([[1, 0, 0], [0, 1, 0]])
-        Jw_tip = n_isol@np.transpose(R)@Jw
+        Jn_tip = np.transpose(R)@Jw
         
         p_norm = np.array([0, 0, 1])
         n = R@p_norm
         nd = (-1)*self.v
         en = cross(n, nd)
-        nrdot_tip = n_isol@np.transpose(R)@nd+self.lam*en
+        nrdot_tip = np.transpose(R)@nd+self.lam*en
 
         
         xr_dot = np.concatenate((vr, nrdot_tip))
-        J = np.vstack((Jv, Jw_tip))
+        J = np.vstack((Jv, Jn_tip))
         gamma = 0.7
         J_Winv = np.linalg.inv(np.transpose(J)@J + gamma**2*np.eye(7))@np.transpose(J)
         
