@@ -341,7 +341,7 @@ class DemoNode(Node):
 
         # Repulsion torque 
         qsdot = 2 * repulsion(qdlast, self.chain5, self.chain4) 
-        print(qsdot)
+        # print(qsdot)
         
         xr_dot = np.concatenate((vr, nrdot_tip))
         J = np.vstack((Jv, Jn_tip))
