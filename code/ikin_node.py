@@ -34,9 +34,41 @@ from visualization_msgs.msg     import MarkerArray
 #
 #   Canadarm2 Joint Names
 #
-jointnames = ['Shoulder_Roll', 'Shoulder_Yaw', 'Shoulder_Pitch', 'Elbow_Pitch', 'Wrist_Pitch', 'Wrist_Yaw', 'Wrist_Roll']
 
+def repulsion(q, wristchain, elbowchain):
+    # Compute the wrist and elbow points.
+    (pwrist, _, Jv, Jw) = wristchain.fkin(q[0:4])  # 5 joints
+    (pelbow, _, _, _)   = elbowchain.fkin(q[0:3])  # 4 joints
 
+    # Determine the wall (obstacle) "line"
+    pw = np.array([0, 0, 3])
+    dw = np.array([0, 3, 0]) 
+
+    # Determine the forearm "line"
+    pa = pwrist
+    da = pelbow - pwrist
+
+    # Solve for the closest point on the forearm.
+    a = (pw - pa) @ np.linalg.pinv(np.vstack((-dw, np.cross(dw, da), da)))
+    parm = pa + max(0, min(1, a[2])) * da
+
+    # Solve for the matching wall point.
+    pwall = pw + dw * np.inner(dw, parm-pw) / np.inner(dw, dw)
+
+    # Compute the distance and repulsion force
+    d = np.linalg.norm(parm-pwall)
+    F = (parm-pwall) / d**2
+
+    # Map the repulsion force acting at parm to the equivalent force
+    # and torque actiing at the wrist point.
+    Fwrist = F
+    Twrist = np.cross(parm-pwrist, F)
+
+    # Convert the force/torque to joint torques (J^T).
+    tau = np.vstack((Jv, Jw)).T @ np.concatenate((Fwrist, Twrist))
+
+    # Return the 5 joint torques as part of the 7 full joints.
+    return np.concatenate((tau, np.zeros(3)))
 #
 #   Demo Node Class
 #
@@ -72,7 +104,11 @@ class DemoNode(Node):
 
         # Initialize ikin variables
         # Set up the kinematic chain object.
-        self.chain = KinematicChain(self, 'world', 'link_ee', jointnames)
+        self.chain = KinematicChain(self, 'world', 'link_ee', self.jointnames())
+        
+         # Set up the intermediate kinematic chain objects.
+        self.chain5 = KinematicChain(self,'world','B5', self.jointnames()[0:4])
+        self.chain4 = KinematicChain(self,'world','B4', self.jointnames()[0:3])
         
         # Define the various points.
         self.njoints = 7
@@ -120,7 +156,16 @@ class DemoNode(Node):
                                
         self.caught = False
         
+<<<<<<< Updated upstream
     def init_ball(self, mode):
+=======
+       # Declare the joint names.
+    def jointnames(self):
+        # Return a list of joint names FOR THE EXPECTED URDF!
+        return ['Shoulder_Roll', 'Shoulder_Yaw', 'Shoulder_Pitch', 'Elbow_Pitch', 'Wrist_Pitch', 'Wrist_Yaw', 'Wrist_Roll']
+        
+    def init_ball(self):
+>>>>>>> Stashed changes
         # Initialize the ball position, angle parameters, workspace parameters, velocity, set the acceleration.
         self.r_spawn = 30
         self.ws_i = 5
@@ -297,13 +342,16 @@ class DemoNode(Node):
         en = cross(n, nd)
         nrdot_tip = n_isol@(np.transpose(R)@nd+self.lam*en)
 
+        # Repulsion torque 
+        qsdot = 2 * repulsion(qdlast, self.chain5, self.chain4) 
+        print(qsdot)
         
         xr_dot = np.concatenate((vr, nrdot_tip))
         J = np.vstack((Jv, Jn_tip))
         gamma = 0.7
         J_Winv = np.linalg.inv(np.transpose(J)@J + gamma**2*np.eye(7))@np.transpose(J)
         
-        qddot = J_Winv@xr_dot
+        qddot = J_Winv@xr_dot + (np.identity(7) - np.linalg.pinv(J) @ J) @ qsdot 
 
         # Integrate the joint position.
         qd = qdlast + dt * qddot
@@ -316,7 +364,7 @@ class DemoNode(Node):
         # Build up a command message and publish.
         cmdmsg = JointState()
         cmdmsg.header.stamp = self.now().to_msg()       # Current time for ROS
-        cmdmsg.name         = jointnames                # List of names
+        cmdmsg.name         = self.jointnames()                # List of names
         cmdmsg.position     = qd.flatten().tolist()      # List of positions
         cmdmsg.velocity     = qddot.flatten().tolist()   # List of velocities
         self.jpub.publish(cmdmsg)
