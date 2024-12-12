@@ -156,16 +156,13 @@ class DemoNode(Node):
                                
         self.caught = False
         
-<<<<<<< Updated upstream
-    def init_ball(self, mode):
-=======
        # Declare the joint names.
     def jointnames(self):
         # Return a list of joint names FOR THE EXPECTED URDF!
         return ['Shoulder_Roll', 'Shoulder_Yaw', 'Shoulder_Pitch', 'Elbow_Pitch', 'Wrist_Pitch', 'Wrist_Yaw', 'Wrist_Roll']
-        
-    def init_ball(self):
->>>>>>> Stashed changes
+       
+    
+    def init_ball(self, mode):
         # Initialize the ball position, angle parameters, workspace parameters, velocity, set the acceleration.
         self.r_spawn = 30
         self.ws_i = 5
