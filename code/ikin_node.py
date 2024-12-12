@@ -217,7 +217,7 @@ class DemoNode(Node):
             self.v = vd
         else:
             
-            '''#generate new ball
+            #generate new ball
             v = np.random.rand(3) - 0.5
             mag = np.linalg.norm(v)
             v_hat = v/mag
@@ -245,9 +245,9 @@ class DemoNode(Node):
             wd = np.zeros(3)
 
             #reset timer
-            self.t = 0'''
+            self.t = 0
 
-            return None
+            # return None
 
             
         # Update the message and publish.
@@ -265,6 +265,17 @@ class DemoNode(Node):
         
         vr = vd+self.lam*ep(pdlast, p)
         wr = wd+self.lam*eR(Rdlast, R)
+        
+        # convert to tip frame
+        # n_isol = np.array([[1, 0, 0], [0, 1, 0]])
+        # Jw_tip = n_isol@np.transpose(R)@Jw
+        
+        # p_norm = np.array([0, 0, p[2]])
+        # n = R@p_norm
+        # nd = (-1)*np.transpose(R)@self.v
+        # en = cross(n, nd)
+        # wr_tip = n_isol@np.transpose(R)@wd+self.lam*en
+
         
         xr_dot = np.concatenate((vr, wr))
         J = np.vstack((Jv, Jw))
