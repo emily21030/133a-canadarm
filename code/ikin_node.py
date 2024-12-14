@@ -16,7 +16,7 @@ from math import pi, sin, cos, acos, atan2, sqrt, fmod, exp
 from rclpy.node                 import Node
 from rclpy.time                 import Duration
 from tf2_ros                    import TransformBroadcaster
-from geometry_msgs.msg          import TransformStamped
+from geometry_msgs.msg          import TransformStamped, PoseStamped, TwistStamped
 from sensor_msgs.msg            import JointState
 
 from code.TransformHelpers     import *
@@ -89,6 +89,8 @@ class DemoNode(Node):
 
         # Add a publisher to send the joint commands.
         self.jpub = self.create_publisher(JointState, '/joint_states', 10)
+        self.ppub = self.create_publisher(PoseStamped, '/pose', 10)
+        self.tpub = self.create_publisher(TwistStamped, '/twist', 10)
 
         # Prepare the publisher (latching for new subscribers).
         quality = QoSProfile(
@@ -395,6 +397,30 @@ class DemoNode(Node):
         cmdmsg.position     = qd.flatten().tolist()      # List of positions
         cmdmsg.velocity     = qddot.flatten().tolist()   # List of velocities
         self.jpub.publish(cmdmsg)
+        
+        # Build up a pose message and publish.
+        msg = PoseStamped()
+        msg.header.stamp       = self.now().to_msg()   # Current time for ROS
+        msg.pose.position.x    = pd.flatten().tolist()[0]
+        msg.pose.position.y    = pd.flatten().tolist()[1]
+        msg.pose.position.z    = pd.flatten().tolist()[2]
+        quat = quat_from_R(Rd)
+        msg.pose.orientation.x = quat[0]
+        msg.pose.orientation.y = quat[1]
+        msg.pose.orientation.z = quat[2]
+        msg.pose.orientation.w = quat[3]
+        self.ppub.publish(msg)
+
+        # Build up a twist message and publish.
+        msg = TwistStamped()
+        msg.header.stamp    = self.now().to_msg()      # Current time for ROS
+        msg.twist.linear.x  = vd.flatten().tolist()[0]
+        msg.twist.linear.y  = vd.flatten().tolist()[1]
+        msg.twist.linear.z  = vd.flatten().tolist()[2]
+        msg.twist.angular.x = wd.flatten().tolist()[0]
+        msg.twist.angular.y = wd.flatten().tolist()[1]
+        msg.twist.angular.z = wd.flatten().tolist()[2]
+        self.tpub.publish(msg)
 
 
 
