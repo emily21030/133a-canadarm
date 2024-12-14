@@ -116,9 +116,6 @@ class DemoNode(Node):
         self.p0 = np.array([17.688, 1.6134, 0.0])
         self.R0 = Reye()
 
-        self.Rleft = Reye()
-        self.Rright = Reye()
-
         # Initialize the current/starting joint position.
         self.qd = self.q0
         self.pd = self.p0
@@ -232,6 +229,20 @@ class DemoNode(Node):
         self.paddle_start = self.pstart+self.radius*self.direction
         self.paddle_end = self.pend+self.radius*self.direction
 
+        # between starting angle and final angle, declare spline
+        # Rotn(axis, theta)
+        # ex. (theta, theta_dot) = spline(t, tf, 0, 90 deg)
+        # omega = theta_dot \cross axis
+        # Rotate into frame coming at ball dir. and then get rid of frame rotating in z-axis
+        # frame of ball vs. frame of paddle, spline rotation from paddle to -ball (this freedom is introduced)
+        # find rotation matrix that takes z-component to -velocity of ball
+        ncatch_tip = np.transpose(self.R0)@(-1*self.direction)
+        n = np.array([0, 0, 1])
+        # n = self.R0@p_norm
+        self.rot_axis = cross(n, ncatch_tip)
+        self.rot_angle = acos(np.dot(n, ncatch_tip))
+        self.Rcatch = self.R0@Rotn(self.rot_axis, self.rot_angle)
+
         self.marker.pose.position    = Point_from_p(self.p)
 
 
@@ -276,8 +287,9 @@ class DemoNode(Node):
 
             (pd, vd) = goto(t, self.tstart, self.p0, self.paddle_start)
 
-            Rd = Reye()
-            wd = np.zeros(3)
+            (alpha, alphadot) = goto(t, self.tstart, 0, self.rot_angle)
+            Rd = self.R0@Rotn(self.rot_axis, alpha) # world frame
+            wd = self.R0@self.rot_axis * alphadot
 
             # For the ball, Integrate the velocity, then the position.
             self.v += self.dt * self.a
@@ -293,7 +305,7 @@ class DemoNode(Node):
 
             (pd, vd) = spline(t-self.tstart, self.tend-self.tstart, self.paddle_start, self.paddle_end, self.v, np.zeros(3))
             
-            Rd = Reye()
+            Rd = self.Rcatch
             wd = np.zeros(3)
             
             # attach ball to arm trajectory
@@ -304,13 +316,14 @@ class DemoNode(Node):
             # Leave ball at rest for this timestep
             pd = self.paddle_end
             vd = np.zeros(3)
-            Rd = Reye()
+            Rd = self.Rcatch
             wd = np.zeros(3)
 
             # Reset simulation values
             self.t0 = self.t
             self.p0 = self.paddle_end
-            self.init_ball("outer")
+            self.R0 = self.Rcatch
+            self.init_ball("random")
 
             
         # Update the message and publish.
@@ -334,10 +347,10 @@ class DemoNode(Node):
         Jn_tip = n_isol@np.transpose(R)@Jw
         
         p_norm = np.array([0, 0, 1])
+        ndlast = Rdlast@p_norm
         n = R@p_norm
-        nd = (-1)*self.v
-        en = cross(n, nd)
-        nrdot_tip = n_isol@(np.transpose(R)@nd+self.lam*en)
+        en = cross(n, ndlast)
+        nrdot_tip = n_isol@np.transpose(R)@(wd+self.lam*en)
 
         # Repulsion torque 
         qsdot = 2 * repulsion(qdlast, self.chain5, self.chain4) 
@@ -348,7 +361,7 @@ class DemoNode(Node):
         gamma = 0.7
         J_Winv = np.linalg.inv(np.transpose(J)@J + gamma**2*np.eye(7))@np.transpose(J)
         
-        qddot = J_Winv@xr_dot + (np.identity(7) - np.linalg.pinv(J) @ J) @ qsdot 
+        qddot = J_Winv@xr_dot # + (np.identity(7) - np.linalg.pinv(J) @ J) @ qsdot 
 
         # Integrate the joint position.
         qd = qdlast + dt * qddot
@@ -374,7 +387,7 @@ class DemoNode(Node):
 def main(args=None):
     # Initialize ROS and the demo node (100Hz).
     rclpy.init(args=args)
-    node = DemoNode('catch', 200)
+    node = DemoNode('catch', 100)
 
     # Spin, until interrupted.
     rclpy.spin(node)
