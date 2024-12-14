@@ -42,22 +42,28 @@ def repulsion(q, wristchain, elbowchain):
 
     # Determine the wall (obstacle) "line"
     pw = np.array([0, 0, 3])
-    dw = np.array([0, 3, 0]) 
+    # dw = np.array([0, 3, 0]) 
 
     # Determine the forearm "line"
     pa = pwrist
     da = pelbow - pwrist
 
+    v = pw - pw
+    t = np.dot(v, da) / np.dot(da, da)
+    t = max(0, min(1, t))
+
+    parm = pa + t*da
+
     # Solve for the closest point on the forearm.
-    a = (pw - pa) @ np.linalg.pinv(np.vstack((-dw, np.cross(dw, da), da)))
-    parm = pa + max(0, min(1, a[2])) * da
+    #a = (pw - pa) @ np.linalg.pinv(np.vstack((-dw, np.cross(dw, da), da)))
+    #parm = pa + max(0, min(1, a[2])) * da
 
     # Solve for the matching wall point.
-    pwall = pw + dw * np.inner(dw, parm-pw) / np.inner(dw, dw)
+    # pwall = pw + dw * np.inner(dw, parm-pw) / np.inner(dw, dw)
 
     # Compute the distance and repulsion force
-    d = np.linalg.norm(parm-pwall)
-    F = (parm-pwall) / d**2
+    d = np.linalg.norm(parm-pw)
+    F = (parm-pw) / d**2
 
     # Map the repulsion force acting at parm to the equivalent force
     # and torque actiing at the wrist point.
@@ -171,7 +177,7 @@ class DemoNode(Node):
         self.range = 1.0
 
         self.radius = 0.5
-        self.speed = np.random.uniform(5, 10)
+        self.speed = np.random.uniform(10, 15)
 
         #generate random unit vector for ball spawn
         v = np.random.rand(3) - 0.5
@@ -304,14 +310,14 @@ class DemoNode(Node):
             self.p += self.dt * self.v
             
         # elif t < 15.0: 
-        elif t < self.tend:
+        elif t < self.tstart + 1.5*(self.tend-self.tstart):
             # Final movement:
             # (s0, s0dot) = spline(t-t0, 15.0-t0, 0.0, 1.0, 0.0, 0.0)
             
             # pd = self.paddle_start + (self.paddle_end - self.paddle_start) * s0
             # vd =           (self.paddle_end - self.paddle_start) * s0dot
 
-            (pd, vd) = spline(t-self.tstart, self.tend-self.tstart, self.paddle_start, self.paddle_end, self.v, np.zeros(3))
+            (pd, vd) = spline(t-self.tstart, 1.5*(self.tend-self.tstart), self.paddle_start, self.paddle_end, self.v, np.zeros(3))
             
             Rd = self.Rcatch
             wd = np.zeros(3)
