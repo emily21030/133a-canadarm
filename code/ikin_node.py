@@ -171,7 +171,7 @@ class DemoNode(Node):
         self.range = 1.0
 
         self.radius = 0.5
-        self.speed = np.random.uniform(10, 15)
+        self.speed = np.random.uniform(5, 10)
 
         #generate random unit vector for ball spawn
         v = np.random.rand(3) - 0.5
@@ -239,9 +239,17 @@ class DemoNode(Node):
         ncatch_tip = np.transpose(self.R0)@(-1*self.direction)
         n = np.array([0, 0, 1])
         # n = self.R0@p_norm
-        self.rot_axis = cross(n, ncatch_tip)
-        self.rot_angle = acos(np.dot(n, ncatch_tip))
+        self.rot_axis = cross(n, ncatch_tip) / np.linalg.norm(cross(n, ncatch_tip))
+        angle = acos(np.dot(n, ncatch_tip))
+        if not np.isclose(np.linalg.norm(np.cross(Rotn(self.rot_axis, angle)@n, ncatch_tip)), 0):
+            self.rot_angle = pi - angle
+        else:
+            self.rot_angle = angle
+        # self.rot_angle = acos(np.dot(n, ncatch_tip))
         self.Rcatch = self.R0@Rotn(self.rot_axis, self.rot_angle)
+
+        # self.get_logger().info(str(self.rot_angle))
+        # self.get_logger().info(str(self.rot_axis))
 
         self.marker.pose.position    = Point_from_p(self.p)
 
@@ -346,11 +354,14 @@ class DemoNode(Node):
         n_isol = np.array([[1, 0, 0], [0, 1, 0]])
         Jn_tip = n_isol@np.transpose(R)@Jw
         
-        p_norm = np.array([0, 0, 1])
-        ndlast = Rdlast@p_norm
-        n = R@p_norm
-        en = cross(n, ndlast)
-        nrdot_tip = n_isol@np.transpose(R)@(wd+self.lam*en)
+        # convert tip to world
+        p_norm_tip = np.array([0, 0, 1])
+        ndlast_world = Rdlast@p_norm_tip
+        n_world = R@p_norm_tip
+        en_world = cross(n_world, ndlast_world)
+        # compute in tip frame
+        nrdot_tip = n_isol@np.transpose(R)@(wd+self.lam*en_world)
+
 
         # Repulsion torque 
         qsdot = 2 * repulsion(qdlast, self.chain5, self.chain4) 
